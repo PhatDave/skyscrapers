@@ -1,23 +1,26 @@
 package com.company;
 
 import java.util.ArrayList;
+import java.util.concurrent.RejectedExecutionException;
 
 import static com.company.Board.boardSize;
 import static com.company.Board.tasks;
 
-public class PuzzleSolver extends Thread {
-	Board  board;
-	String pos   = "";
-	int    guess = 0;
+//public class PuzzleSolver extends Thread {
+public class PuzzleSolver implements Runnable {
+	Board                           board;
+	String                          pos   = "";
+	int                             guess = 0;
 
 	public PuzzleSolver(Board board) {
 		this.board = board;
 	}
 
-	public PuzzleSolver(Board board, String pos, int guess) {
+	public PuzzleSolver(Board board, String pos, int guess, Board importBoard) {
 		this.board = board;
 		this.pos   = pos;
 		this.guess = guess;
+		this.board.importBetter(importBoard.exportBetter(), false);
 	}
 
 	private static ArrayList<Integer> getAllIndices(ArrayList<Integer> list, int lookup) {
@@ -30,7 +33,9 @@ public class PuzzleSolver extends Thread {
 		return temp;
 	}
 
+	@Override
 	public void run() {
+		board.inProgress = true;
 //		System.out.println(Thread.currentThread().getName());
 		// Check for guess
 		if (guess != 0) {
@@ -112,7 +117,6 @@ public class PuzzleSolver extends Thread {
 		}
 
 		// Advanced steps
-		// TODO: Redo using new rows and columns; also buggy? -- nvm, i fixed it
 		for (int i = 0; i < boardSize; i++) {
 			int x = tasks.get("Top").get(i);
 			for (int j = 0; j < x - 1; j++) {
@@ -143,5 +147,17 @@ public class PuzzleSolver extends Thread {
 			}
 		}
 		board.complete = true;
+		board.inProgress = false;
+
+		if (board.isValid())
+			board.solution = true;
+		else
+			board.error = true;
+		board.checked = true;
+
+//		Main.mainThread.interrupt();
+		try {
+			Main.imDone(this);
+		} catch (RejectedExecutionException ignored) {}
 	}
 }

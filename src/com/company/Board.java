@@ -14,7 +14,6 @@ public class Board {
 	static Map<Integer, ArrayList<String>> reverseColumns = new HashMap<>();
 	static int                             boardSize;
 
-	transient PuzzleSolver currentSolver;
 	Map<String, ArrayList<Integer>> field         = new HashMap<>();
 	Map<String, Boolean>            assignedField = new HashMap<>();
 	boolean                         inProgress    = false;
@@ -77,6 +76,21 @@ public class Board {
 		}
 	}
 
+	public Map<String, ArrayList<Integer>> exportBetter() {
+		Map<String, ArrayList<Integer>> export = new HashMap<>();
+
+		for (String member : boardMembers) {
+			ArrayList<Integer> currentMember = new ArrayList<>();
+			for (Integer entry : field.get(member)) {
+				int temp = entry;
+				currentMember.add(temp);
+			}
+			export.put(member, currentMember);
+		}
+
+		return export;
+	}
+
 	public String export() {
 		StringBuilder output = new StringBuilder();
 
@@ -84,6 +98,24 @@ public class Board {
 			output.append(member).append(field.get(member));
 
 		return output.toString();
+	}
+
+	// Does not work
+	public void importBetter(Map<String, ArrayList<Integer>> input, boolean initial) {
+		for (String member : boardMembers) {
+			try {
+				input.get(member);
+				ArrayList<Integer> currentMember = new ArrayList<>();
+				for (Integer entry : input.get(member)) {
+					int temp = entry;
+					currentMember.add(temp);
+					if (initial && input.get(member).size() == 1)
+						assign(member, temp);
+				}
+				field.put(member, currentMember);
+			}
+			catch (Exception ignored) {}
+		}
 	}
 
 	public void importField(String input) {
@@ -100,7 +132,7 @@ public class Board {
 		}
 	}
 
-	protected void printBoard() {
+	protected String printBoard() {
 		System.out.println(tasks);
 		StringBuilder output      = new StringBuilder();
 		StringBuilder outputSmall = new StringBuilder();
@@ -114,7 +146,7 @@ public class Board {
 			}
 			output.append("\n");
 		}
-		System.out.println(output);
+		return output.toString();
 	}
 
 	protected void propagate(String pos, int i) {
@@ -139,6 +171,8 @@ public class Board {
 	}
 
 	protected boolean checkRow(int task, ArrayList<String> test) {
+		if (task == 0)
+			return false;
 		int top     = 0;
 		int visible = 0;
 		for (String pos : test) {
@@ -148,25 +182,28 @@ public class Board {
 					visible += 1;
 					top = c;
 					if (visible > task) {
-						return false;
+						return true;
 					}
 				}
 			} else {
-				return false;
+				return true;
 			}
 		}
-		return true;
+		if (visible == task)
+			return false;
+		else
+			return true;
 	}
 
 	protected boolean isValid() {
 		for (int i = 0; i < boardSize; i++) {
-			if (!checkRow(tasks.get("Top").get(i), columns.get(i)))
+			if (checkRow(tasks.get("Top").get(i), columns.get(i)))
 				return false;
-			if (!checkRow(tasks.get("Bottom").get(i), reverseColumns.get(i)))
+			if (checkRow(tasks.get("Bottom").get(i), reverseColumns.get(i)))
 				return false;
-			if (!checkRow(tasks.get("Left").get(i), rows.get(i)))
+			if (checkRow(tasks.get("Left").get(i), rows.get(i)))
 				return false;
-			if (!checkRow(tasks.get("Right").get(i), reverseRows.get(i)))
+			if (checkRow(tasks.get("Right").get(i), reverseRows.get(i)))
 				return false;
 		}
 		checked = true;

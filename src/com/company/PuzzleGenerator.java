@@ -13,10 +13,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class PuzzleGenerator {
-	String                          puzzleID = "";
-	ArrayList<Integer>              task     = new ArrayList<>();
-	Map<String, ArrayList<Integer>> tasks    = new HashMap<>();
-	String                          link     = "";
+	static String                          puzzleID   = "";
+	static ArrayList<Integer>              task       = new ArrayList<>();
+	static Map<String, ArrayList<Integer>> tasks      = new HashMap<>();
+	static String                          link       = "";
+	static boolean                         hasField   = false;
+	static int                             difficulty = 0;
+	static Map<String, ArrayList<Integer>> field      = new HashMap<>();
 
 	public PuzzleGenerator() {
 		this.deder(0, "https://www.puzzle-skyscrapers.com/", false);
@@ -32,65 +35,120 @@ public class PuzzleGenerator {
 
 	public void deder(int sizei, String link, boolean linkSet) {
 		String rootLink = "https://www.puzzle-skyscrapers.com/";
+		difficulty = sizei;
 		if (!linkSet) {
-			this.link = rootLink;
+			PuzzleGenerator.link = rootLink;
+			PuzzleGenerator.link += "/?size=" + sizei;
 		} else {
-			this.link = link;
-		}
-		URL url;
-
-		String size = Integer.toString(sizei);
-		if (sizei != 0 && sizei != 3 && sizei != 6) {
-			System.out.println("Invalid size");
-			return;
-		} else if ((sizei == 3 || sizei == 6) && !linkSet) {
-			this.link += "/?size=" + size;
+			PuzzleGenerator.link = link;
 		}
 
 		try {
-			url = new URL(this.link);
+			System.out.println("Grabbing puzzle from site...");
+			URL            url    = new URL(PuzzleGenerator.link);
 			URLConnection  con    = url.openConnection();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(con.getInputStream()));
 
-			Pattern taskRegex     = Pattern.compile("var task = '(.+)';");
+			Pattern taskRegex = Pattern.compile("var task = '((\\d?/?)+)(.+); \\$\\(document\\)");
+//			Pattern taskRegex     = Pattern.compile("var task = '(.+)';");
 			Pattern puzzleIDRegex = Pattern.compile("span id=\"puzzleID\">(.+)</span>");
 			String  temp;
+			System.out.println("Formatting html into board...");
 			while ((temp = reader.readLine()) != null) {
 				Matcher m = puzzleIDRegex.matcher(temp);
 				if (m.find()) {
-					this.puzzleID = m.group(1);
+					puzzleID = m.group(1);
 				}
 
 				m = taskRegex.matcher(temp);
 				if (m.find()) {
-					for (String c : m.group(1).split("/")) {
-						this.task.add(Integer.parseInt(c));
+					String match = m.group(1);
+
+					for (int i = 0; i < match.length(); i++) {
+						if (match.charAt(i) == '/') {
+							task.add(0);
+						} else {
+							task.add(Integer.parseInt(String.valueOf(match.charAt(i))));
+							i++;
+						}
+						if (i == match.length() - 1 && match.charAt(i) == '/')
+							task.add(0);
+					}
+
+					match = m.group(3);
+					if (!match.equals("'")) {
+						hasField = true;
+						StringBuilder offset    = new StringBuilder();
+						int           offsetInt = 0;
+						try {
+							int i = 0;
+							while (true) {
+								i++;
+								offset.delete(0, offset.length());
+								while (match.charAt(i) >= 97 && match.charAt(i) <= 122) {
+									offset.append(match.charAt(i));
+									i++;
+
+									if (match.charAt(i) == '\'')
+										throw new StringIndexOutOfBoundsException();
+								}
+								if (offset.length() == 1) {
+									offsetInt += offset.charAt(0) - 96;
+								} else {
+									offsetInt += offset.charAt(0) - 96;
+									offsetInt += offset.charAt(1) - 96;
+								}
+
+								ArrayList<Integer> iveGotToDoThis = new ArrayList<>();
+								iveGotToDoThis.add((int) match.charAt(i) - 48);
+
+								field.put(offsetToPos(offsetInt), iveGotToDoThis);
+								offsetInt++;
+							}
+						}
+						catch (StringIndexOutOfBoundsException ignored) {}
+//						System.exit(0);
 					}
 				}
 			}
-			this.link = "https://www.puzzle-skyscrapers.com/?e=" +
-			            Base64.getEncoder().encodeToString((size + ":" + this.puzzleID).getBytes());
+			if (!linkSet)
+				PuzzleGenerator.link = "https://www.puzzle-skyscrapers.com/?e=" +
+				                       Base64.getEncoder().encodeToString((sizei + ":" + puzzleID).getBytes());
 		}
 		catch (IOException e) {
 			System.out.println("oopsie");
 			e.printStackTrace();
 		}
 
-		int                boardSize = this.task.size() / 4;
+		int                boardSize = task.size() / 4;
 		ArrayList<Integer> Top       = new ArrayList<>();
 		ArrayList<Integer> Bottom    = new ArrayList<>();
 		ArrayList<Integer> Left      = new ArrayList<>();
 		ArrayList<Integer> Right     = new ArrayList<>();
 		for (int i = 0; i < boardSize; i++) {
-			Top.add(this.task.get(i));
-			Bottom.add(this.task.get(i + boardSize));
-			Left.add(this.task.get(i + (2 * boardSize)));
-			Right.add(this.task.get(i + (3 * boardSize)));
+			Top.add(task.get(i));
+			Bottom.add(task.get(i + boardSize));
+			Left.add(task.get(i + (2 * boardSize)));
+			Right.add(task.get(i + (3 * boardSize)));
 		}
-		this.tasks.put("Top", Top);
-		this.tasks.put("Bottom", Bottom);
-		this.tasks.put("Left", Left);
-		this.tasks.put("Right", Right);
+		tasks.put("Top", Top);
+		tasks.put("Bottom", Bottom);
+		tasks.put("Left", Left);
+		tasks.put("Right", Right);
+		System.out.println("Board done");
 		// System.out.println("Seed = " + this.puzzleID + "\nTask = " + this.task + "\nLink " + this.link);
+	}
+
+	private String offsetToPos(int offset) {
+		int           n      = 0;
+		StringBuilder output = new StringBuilder();
+		while (offset > task.size() / 4) {
+			offset -= task.size() / 4;
+			n++;
+		}
+
+		output.append((char) (65 + n));
+		output.append(offset);
+		return output.toString();
 	}
 }

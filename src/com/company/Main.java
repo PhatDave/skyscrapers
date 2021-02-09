@@ -1,9 +1,16 @@
 package com.company;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
-// https://www.puzzle-skyscrapers.com/?e=MjoxMCw3MDcsNDYz 3412 2134 1243 4321
-//
+// TODO: Enable looking through set fields for complex puzzles and maybe add option for directly importing puzzle
+//  without downloading it from page, seems to take a long time (url get) ALSO rework export/import to use arraylist
+//  instead of string and then just manually copy the thing instead of using string like a big DUMDUM
+// Rudi kaze, za easy puzzle je ok, ne treba teze i da e ne komplicira vise nista!
 
 public class Main {
 	public static final String ANSI_RESET  = "\u001B[0m";
@@ -16,73 +23,130 @@ public class Main {
 	public static final String ANSI_CYAN   = "\u001B[36m";
 	public static final String ANSI_WHITE  = "\u001B[37m";
 
+	static int              threadsStarted = 0;
+	static Thread           mainThread     = Thread.currentThread();
+	static boolean          firstBoard     = true;
+	static ExecutorService  executor       = Executors.newFixedThreadPool(100);
+	static ArrayList<Board> boards         = new ArrayList<>();
+	static long             fullStart      = 0;
+	static long             solveStart     = 0;
+	static Board            solutionBoard;
+	static boolean          solved         = false;
 
-	public static void main(String[] args) {
-		// Dual - solved
-//		PuzzleGenerator puzzle = new PuzzleGenerator("https://www.puzzle-skyscrapers.com/?e=MDo2NTcsNzQ2");
-		// Very fucked - solved
-//		PuzzleGenerator puzzle = new PuzzleGenerator("https://www.puzzle-skyscrapers.com/?e=MDo1NDIsNzEw");
-		// Breaks program - solved
-//		PuzzleGenerator puzzle = new PuzzleGenerator("https://www.puzzle-skyscrapers.com/?e=MDoxOCwzNDg=");
-		// Deadly!
-//		PuzzleGenerator puzzle = new PuzzleGenerator("https://www.puzzle-skyscrapers.com/?e=MDoxNzAsMTA4");
-		// Breaks program, 5x5
-//		PuzzleGenerator puzzle = new PuzzleGenerator(3, "https://www.puzzle-skyscrapers.com/?e=MzoxNCw4ODYsODgz");
-		PuzzleGenerator puzzle = new PuzzleGenerator();
-		System.out.println(puzzle.link);
-//		System.out.println(puzzle.puzzleID);
-//		System.out.println(puzzle.task);
-//		System.out.println(puzzle.tasks);
-		System.out.println("\n");
+	public static void imDone(PuzzleSolver currentSolver) {
+		if (currentSolver.board.solution) {
+			solved = true;
+			solutionBoard = currentSolver.board;
+			mainThread.interrupt();
+//			executor.shutdownNow();
+			try {
+				boolean fuckwit = executor.awaitTermination(30, TimeUnit.SECONDS);
+			} catch (Exception ignored) {}
+		} else {
+			if (!currentSolver.board.bestGuess().equals("")) {
+				String guess = currentSolver.board.bestGuess();
+				for (int i = 0; i < currentSolver.board.field.get(guess).size(); i++) {
+					Board newBoard = new Board(PuzzleGenerator.tasks);
+					executor.execute(new Thread(
+							new PuzzleSolver(newBoard, guess, currentSolver.board.field.get(guess).get(i),
+							                 currentSolver.board)));
+					boards.add(newBoard);
+					threadsStarted++;
+				}
+			}
+		}
+	}
 
-		boolean          solved       = false;
-		Board            first        = new Board(puzzle.tasks);
-		ArrayList<Board> boards       = new ArrayList<>();
-		ArrayList<Board> boardsBuffer = new ArrayList<>();
+	public static void main(String[] args) throws InterruptedException, IOException {
+		fullStart = System.nanoTime();
+
+//		new PuzzleGenerator(7, "https://www.puzzle-skyscrapers.com/?e=Nzo1LDM0MCw3MTY=");
+		new PuzzleGenerator(0);
+
+		ThreadMonitor monitor = new ThreadMonitor();
+
+		System.out.println(PuzzleGenerator.link);
+
+		Board first;
+		if (PuzzleGenerator.hasField) {
+			first = new Board(PuzzleGenerator.tasks);
+			first.importBetter(PuzzleGenerator.field, true);
+		} else
+			first = new Board(PuzzleGenerator.tasks);
 		boards.add(first);
 
 		// Starts thread for each incomplete - idle board in boards until a solution is found
-		while (!solved) {
-			for (Board forBoard : boards) {
-				if (!forBoard.inProgress && !forBoard.complete) {
-					PuzzleSolver solver = new PuzzleSolver(forBoard);
-					forBoard.inProgress    = true;
-					forBoard.currentSolver = solver;
-					solver.start();
-				} else if (forBoard.complete) {
-					forBoard.inProgress = false;
-					if (forBoard.isValid()) {
-						solved            = true;
-						forBoard.solution = true;
-					} else if (!forBoard.bestGuess().equals("") && !forBoard.error) {
-						String guess = forBoard.bestGuess();
-						for (int i = 0; i < forBoard.field.get(guess).size(); i++) {
-							Board newBoard = new Board(puzzle.tasks);
-							newBoard.importField(forBoard.export());
-							boardsBuffer.add(newBoard);
-
-							PuzzleSolver solver = new PuzzleSolver(newBoard, guess, forBoard.field.get(guess).get(i));
-							solver.start();
-						}
-					} else {
-						forBoard.error = true;
-					}
-
-					if (forBoard.solution) {
-						System.out.println(ANSI_GREEN);
-						forBoard.printBoard();
-						System.out.println(ANSI_RESET);
-					} else if (forBoard.error) {
-//						System.out.println(ANSI_RED);
-//						forBoard.printBoard();
-//						System.out.println(ANSI_RESET);
-					} else {
-//						forBoard.printBoard();
-					}
-				}
+//		System.in.read();
+		monitor.start();
+		solveStart = System.nanoTime();
+		try {
+			if (firstBoard) {
+				firstBoard = false;
+				executor.execute(new Thread(new PuzzleSolver(first)));
 			}
-			boards.addAll(boardsBuffer);
-			boardsBuffer.clear();
+			Thread.sleep(60 * 1000);
+			System.exit(-1);
+		}
+		catch (InterruptedException e) {
+			long end = System.nanoTime();
+
+			StringBuilder temp = new StringBuilder();
+			temp.append("Top:  ");
+			for (Integer i : Board.tasks.get("Top"))
+				temp.append(i);
+			temp.append("    Left:  ");
+			for (Integer i : Board.tasks.get("Left"))
+				temp.append(i);
+			temp.append("    Bottom:  ");
+			for (Integer i : Board.tasks.get("Bottom"))
+				temp.append(i);
+			temp.append("    Right:  ");
+			for (Integer i : Board.tasks.get("Right"))
+				temp.append(i);
+
+			ThreadMonitor.run = false;
+			System.out.println(ANSI_GREEN);
+			System.out.println(solutionBoard.printBoard());
+			System.out.println(ANSI_RESET);
+			System.out.println(threadsStarted);
+			System.out.println((end - solveStart) / 1000000);
+
+			try {
+				String     fileName = "log" + PuzzleGenerator.difficulty + ".txt";
+				FileWriter myWriter = new FileWriter(fileName, true);
+				myWriter.write(PuzzleGenerator.link);
+				myWriter.write("\n");
+				myWriter.write(temp.toString());
+				myWriter.write("\n");
+				myWriter.write(solutionBoard.printBoard());
+				myWriter.write(Integer.toString(threadsStarted));
+
+				myWriter.write("\n");
+				myWriter.write(Long.toString(end - fullStart));
+				myWriter.write("ns ");
+				myWriter.write(Long.toString((end - fullStart) / 1000));
+				myWriter.write("us ");
+				myWriter.write(Long.toString((end - fullStart) / 1000000));
+				myWriter.write("ms ");
+				myWriter.write(Long.toString((end - fullStart) / 1000000000));
+				myWriter.write("s ");
+
+				myWriter.write("\n");
+				myWriter.write(Long.toString(end - solveStart));
+				myWriter.write("ns ");
+				myWriter.write(Long.toString((end - solveStart) / 1000));
+				myWriter.write("us ");
+				myWriter.write(Long.toString((end - solveStart) / 1000000));
+				myWriter.write("ms ");
+				myWriter.write(Long.toString((end - solveStart) / 1000000000));
+				myWriter.write("s ");
+
+				myWriter.write("\n".repeat(2));
+				myWriter.close();
+			}
+			catch (IOException ignored) {}
+
+			System.exit(0);
 		}
 	}
 }
