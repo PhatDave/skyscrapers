@@ -78,7 +78,6 @@ public class Main {
 		root.add(field);
 		root.pack();
 		root.setVisible(true);
-		new PuzzleGenerator();
 //		new PuzzleGenerator(7, "https://www.puzzle-skyscrapers.com/?e=Nzo1LDM0MCw3MTY=");
 //		new PuzzleGenerator(7, "https://www.puzzle-skyscrapers.com/?e=Nzo5LDE5OCw2ODE=");
 //		new PuzzleGenerator(0,"https://www.puzzle-skyscrapers.com/?e=MDoxNjAsMDMx");

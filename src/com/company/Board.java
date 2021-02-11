@@ -58,7 +58,6 @@ public class Board {
 	// TODO: maybe even assign all static members to the first board and make all subsequent boards as lightweight as
 	// TODO: possible
 	// TODO: situate every static variable into PuzzleGenerator and pass it by reference to each board
-
 	/**
 	 * Generates a board given by tasks, assigns all static values for use by other classes
 	 * @param tasks tasks for board to obey
@@ -131,6 +130,7 @@ public class Board {
 	}
 
 	// TODO: fix to documentation description and update doc
+	// wtf is initial?
 	/**
 	 * Creates a deep copy of the given board by copying it's field
 	 */
