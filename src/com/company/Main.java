@@ -61,13 +61,13 @@ public class Main {
 	}
 
 	// TODO: introduce new variable to board named parent board to track the hierarchy to the winning one
-	//  maybe make array list too to track every move per board on assign
-	//  also make benchmark class to run same board x times, for this get a board for first time and reuse it
-	//  output results of benchmark to txt or serialize and display with js
-	//  also rework main algorithm to be more generic // using row column rowreversed and columnreversed
-	//  try making constants final after assignment
-	//  maybe rework propagation to add all to-eliminate entries to a queue and remove them from field all at onc
-	//  export is actually a waste of time and returns a shallow copy where import makes a deep copy
+	// TODO: maybe make array list too to track every move per board on assign
+	// TODO: also make benchmark class to run same board x times, for this get a board for first time and reuse it
+	// TODO: output results of benchmark to txt or serialize and display with js
+	// TODO: also rework main algorithm to be more generic // using row column rowreversed and columnreversed
+	// TODO: try making constants final after assignment
+	// TODO: maybe rework propagation to add all to-eliminate entries to a queue and remove them from field all at onc
+	// TODO: export is actually a waste of time and returns a shallow copy where import makes a deep copy
 
 	public static void main(String[] args) throws InterruptedException, IOException {
 		fullStart = System.nanoTime();
@@ -78,14 +78,14 @@ public class Main {
 		root.add(field);
 		root.pack();
 		root.setVisible(true);
-
+		new PuzzleGenerator();
 //		new PuzzleGenerator(7, "https://www.puzzle-skyscrapers.com/?e=Nzo1LDM0MCw3MTY=");
 //		new PuzzleGenerator(7, "https://www.puzzle-skyscrapers.com/?e=Nzo5LDE5OCw2ODE=");
 //		new PuzzleGenerator(0,"https://www.puzzle-skyscrapers.com/?e=MDoxNjAsMDMx");
 //		new PuzzleGenerator(6);
 		new PuzzleGenerator(6, "https://www.puzzle-skyscrapers.com/?e=Njo4LDY5MiwyNTc=");
 
-		ThreadMonitor monitor = new ThreadMonitor();
+//		ThreadMonitor monitor = new ThreadMonitor();
 
 		System.out.println(PuzzleGenerator.link);
 
@@ -100,7 +100,7 @@ public class Main {
 
 		// Starts thread for each incomplete - idle board in boards until a solution is found
 //		System.in.read();
-		monitor.start();
+//		monitor.start();
 		solveStart = System.nanoTime();
 		try {
 			if (firstBoard) {
@@ -127,7 +127,7 @@ public class Main {
 			for (Integer i : Board.tasks.get("Right"))
 				temp.append(i);
 
-			ThreadMonitor.run = false;
+//			ThreadMonitor.run = false;
 			System.out.println(ANSI_GREEN);
 			System.out.println(solutionBoard.printBoard());
 			System.out.println(ANSI_RESET);

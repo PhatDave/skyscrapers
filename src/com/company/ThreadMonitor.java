@@ -2,12 +2,16 @@ package com.company;
 
 import static com.company.Main.boards;
 
+/**
+ * Intended to output the number of threads/boards in progress, boards completed and total number of boards
+ * Strongly discouraged from being used, does not work well with other threads working
+ * @deprecated
+ */
 public class ThreadMonitor extends Thread {
 	static boolean run = true;
 	int boardsInProgress = 0;
 	int boardsCompleted  = 0;
 
-	@Override
 	public void run() {
 		while (run) {
 			try {

@@ -12,6 +12,22 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+
+/**
+ * Generates the puzzle by querying site and retrieving puzzle tasks and field, all
+ * values are static
+ * Creating multiple objects is strongly discouraged and may cause strange behavior
+ * <p>
+ * Static variables are
+ *  <ul>
+ *     <li>String puzzleID<pre>    ID of the puzzle generated</pre>
+ *     <li>String link<pre>    link to the puzzle</pre>
+ *     <li>int difficulty<pre>    puzzle difficulty (sizei in constructor)</pre>
+ *     <li>Map field<pre>    board, see Board for more info</pre>
+ *     <li>Map tasks<pre>    puzzle tasks, see Board for more info</pre>
+ *  </ul>
+ * @see com.company.Board
+ */
 public class PuzzleGenerator {
 	static String                          puzzleID   = "";
 	static ArrayList<Integer>              task       = new ArrayList<>();
@@ -21,19 +37,40 @@ public class PuzzleGenerator {
 	static int                             difficulty = 0;
 	static Map<String, ArrayList<Integer>> field      = new HashMap<>();
 
+	/**
+	 * Assigns difficulty to 0 by default
+	 * @deprecated use {@link #PuzzleGenerator(int)} method instead
+	 * @see PuzzleGenerator Static variables available
+	 */
 	public PuzzleGenerator() {
-		this.deder(0, "https://www.puzzle-skyscrapers.com/", false);
+		this.generate(0, "https://www.puzzle-skyscrapers.com/", false);
 	}
 
+	/**
+	 * Generate a puzzle seeded by link
+	 * @param sizei difficulty of puzzle generated, 0 - 2 for 4x4, 3 - 5 for 5x5, 6 - 8 for 6x6, >8 is not supported
+	 * @param link link to seed puzzle by
+	 * @see PuzzleGenerator Static variables available
+	 */
 	public PuzzleGenerator(int sizei, String link) {
-		this.deder(sizei, link, true);
+		this.generate(sizei, link, true);
 	}
 
+	/**
+	 * Generate a random puzzle
+	 * @param sizei difficulty of puzzle generated, 0 - 2 for 4x4, 3 - 5 for 5x5, 6 - 8 for 6x6, >8 is not supported
+	 * @see PuzzleGenerator Static variables available
+	 */
 	public PuzzleGenerator(int sizei) {
-		this.deder(sizei, "https://www.puzzle-skyscrapers.com/", false);
+		this.generate(sizei, "https://www.puzzle-skyscrapers.com/", false);
 	}
 
-	public void deder(int sizei, String link, boolean linkSet) {
+	/**
+	 * Used by class' constructor
+	 * @param sizei difficulty of puzzle generated, 0 - 2 for 4x4, 3 - 5 for 5x5, 6 - 8 for 6x6, >8 is not supported
+	 * @param link link to seed puzzle by
+	 */
+	private void generate(int sizei, String link, boolean linkSet) {
 		String rootLink = "https://www.puzzle-skyscrapers.com/";
 		difficulty = sizei;
 		if (!linkSet) {
@@ -139,6 +176,9 @@ public class PuzzleGenerator {
 		// System.out.println("Seed = " + this.puzzleID + "\nTask = " + this.task + "\nLink " + this.link);
 	}
 
+	/**
+	 * Used internally by {@link #generate}
+	 */
 	private String offsetToPos(int offset) {
 		int           n      = 0;
 		StringBuilder output = new StringBuilder();
