@@ -1,5 +1,7 @@
 package com.company;
 
+import javax.swing.*;
+import java.awt.*;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,16 +37,17 @@ public class Main {
 
 	public static void imDone(PuzzleSolver currentSolver) {
 		if (currentSolver.board.solution) {
-			solved = true;
+			solved        = true;
 			solutionBoard = currentSolver.board;
 			mainThread.interrupt();
 //			executor.shutdownNow();
 			try {
-				boolean fuckwit = executor.awaitTermination(30, TimeUnit.SECONDS);
-			} catch (Exception ignored) {}
+				final boolean b = executor.awaitTermination(30, TimeUnit.SECONDS);
+			}
+			catch (Exception ignored) {}
 		} else {
-			if (!currentSolver.board.bestGuess().equals("")) {
-				String guess = currentSolver.board.bestGuess();
+			String guess = currentSolver.board.bestGuess();
+			if (!guess.equals("")) {
 				for (int i = 0; i < currentSolver.board.field.get(guess).size(); i++) {
 					Board newBoard = new Board(PuzzleGenerator.tasks);
 					executor.execute(new Thread(
@@ -57,11 +60,30 @@ public class Main {
 		}
 	}
 
+	// TODO: introduce new variable to board named parent board to track the hierarchy to the winning one
+	//  maybe make array list too to track every move per board on assign
+	//  also make benchmark class to run same board x times, for this get a board for first time and reuse it
+	//  output results of benchmark to txt or serialize and display with js
+	//  also rework main algorithm to be more generic // using row column rowreversed and columnreversed
+	//  try making constants final after assignment
+	//  maybe rework propagation to add all to-eliminate entries to a queue and remove them from field all at onc
+	//  export is actually a waste of time and returns a shallow copy where import makes a deep copy
+
 	public static void main(String[] args) throws InterruptedException, IOException {
 		fullStart = System.nanoTime();
 
+		JFrame    root  = new JFrame();
+		JTextArea field = new JTextArea();
+		field.setPreferredSize(new Dimension(400, 200));
+		root.add(field);
+		root.pack();
+		root.setVisible(true);
+
 //		new PuzzleGenerator(7, "https://www.puzzle-skyscrapers.com/?e=Nzo1LDM0MCw3MTY=");
-		new PuzzleGenerator(0);
+//		new PuzzleGenerator(7, "https://www.puzzle-skyscrapers.com/?e=Nzo5LDE5OCw2ODE=");
+//		new PuzzleGenerator(0,"https://www.puzzle-skyscrapers.com/?e=MDoxNjAsMDMx");
+//		new PuzzleGenerator(6);
+		new PuzzleGenerator(6, "https://www.puzzle-skyscrapers.com/?e=Njo4LDY5MiwyNTc=");
 
 		ThreadMonitor monitor = new ThreadMonitor();
 
@@ -74,6 +96,7 @@ public class Main {
 		} else
 			first = new Board(PuzzleGenerator.tasks);
 		boards.add(first);
+		System.out.println(first.printBoard());
 
 		// Starts thread for each incomplete - idle board in boards until a solution is found
 //		System.in.read();
@@ -84,7 +107,7 @@ public class Main {
 				firstBoard = false;
 				executor.execute(new Thread(new PuzzleSolver(first)));
 			}
-			Thread.sleep(60 * 1000);
+			Thread.sleep((long) (60 * 1e18));
 			System.exit(-1);
 		}
 		catch (InterruptedException e) {
@@ -109,7 +132,11 @@ public class Main {
 			System.out.println(solutionBoard.printBoard());
 			System.out.println(ANSI_RESET);
 			System.out.println(threadsStarted);
-			System.out.println((end - solveStart) / 1000000);
+			System.out.println((end - solveStart) / 1e6 + "ms");
+
+			field.setText(PuzzleGenerator.link + "\n" + solutionBoard.printBoard() + "\n" + threadsStarted + "\n" +
+			              (end - solveStart) / 1e6 +
+			              "ms");
 
 			try {
 				String     fileName = "log" + PuzzleGenerator.difficulty + ".txt";
@@ -141,12 +168,12 @@ public class Main {
 				myWriter.write(Long.toString((end - solveStart) / 1000000000));
 				myWriter.write("s ");
 
-				myWriter.write("\n".repeat(2));
+				myWriter.write("\n\n\n");
 				myWriter.close();
 			}
 			catch (IOException ignored) {}
 
-			System.exit(0);
+//			System.exit(0);
 		}
 	}
 }

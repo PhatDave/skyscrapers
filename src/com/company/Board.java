@@ -22,6 +22,9 @@ public class Board {
 	boolean                         solution      = false;
 	boolean                         error         = false;
 
+	// TODO: maybe optimize import/export a bit more, seems to be the weak link...
+	//  maybe export and import only changes but that will still be lots
+	//  maybe not export entire map but only elements that changed, that could be better
 	public Board(Map<String, ArrayList<Integer>> tasks) {
 		Board.tasks = tasks;
 		boardSize   = tasks.get("Top").size();
@@ -80,56 +83,34 @@ public class Board {
 		Map<String, ArrayList<Integer>> export = new HashMap<>();
 
 		for (String member : boardMembers) {
-			ArrayList<Integer> currentMember = new ArrayList<>();
-			for (Integer entry : field.get(member)) {
-				int temp = entry;
-				currentMember.add(temp);
-			}
-			export.put(member, currentMember);
+			export.put(member, field.get(member));
 		}
 
 		return export;
 	}
 
-	public String export() {
-		StringBuilder output = new StringBuilder();
-
-		for (String member : boardMembers)
-			output.append(member).append(field.get(member));
-
-		return output.toString();
-	}
-
-	// Does not work
 	public void importBetter(Map<String, ArrayList<Integer>> input, boolean initial) {
-		for (String member : boardMembers) {
-			try {
-				input.get(member);
-				ArrayList<Integer> currentMember = new ArrayList<>();
-				for (Integer entry : input.get(member)) {
-					int temp = entry;
-					currentMember.add(temp);
-					if (initial && input.get(member).size() == 1)
-						assign(member, temp);
-				}
-				field.put(member, currentMember);
-			}
-			catch (Exception ignored) {}
-		}
-	}
 
-	public void importField(String input) {
-		String[] fieldInput = input.split("]");
-		for (String forString : fieldInput) {
-			String             pos     = forString.substring(0, 2);
-			String             val     = forString.substring(3);
-			String[]           vals    = val.split(", ");
-			ArrayList<Integer> newList = new ArrayList<>();
-			for (String forVal : vals)
-				if (!forVal.equals(""))
-					newList.add(Integer.parseInt(forVal));
-			this.field.put(pos, newList);
+
+		for (Map.Entry<String, ArrayList<Integer>> entry : input.entrySet()) {
+			field.put(entry.getKey(), new ArrayList<>(entry.getValue()));
 		}
+
+
+//		for (String member : boardMembers) {
+//			try {
+//				var tempOne = input.get(member);
+//				ArrayList<Integer> currentMember = new ArrayList<>();
+//				for (Integer entry : tempOne) {
+//					int temp = entry;
+//					currentMember.add(temp);
+//					if (initial && input.get(member).size() == 1)
+//						assign(member, temp);
+//				}
+//				field.put(member, currentMember);
+//			}
+//			catch (Exception ignored) {}
+//		}
 	}
 
 	protected String printBoard() {
@@ -157,9 +138,8 @@ public class Board {
 
 	protected void eliminate(String pos, int i) {
 		field.get(pos).removeIf(e -> e.equals(i));
-		if (field.get(pos).size() == 1 && !assignedField.get(pos)) {
+		if (field.get(pos).size() == 1 && !assignedField.get(pos))
 			assign(pos, field.get(pos).get(0));
-		}
 	}
 
 	protected void assign(String pos, int i) {
@@ -189,10 +169,7 @@ public class Board {
 				return true;
 			}
 		}
-		if (visible == task)
-			return false;
-		else
-			return true;
+		return visible != task;
 	}
 
 	protected boolean isValid() {
