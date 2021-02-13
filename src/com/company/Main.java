@@ -42,7 +42,7 @@ public class Main {
 			mainThread.interrupt();
 //			executor.shutdownNow();
 			try {
-				final boolean b = executor.awaitTermination(30, TimeUnit.SECONDS);
+				executor.awaitTermination(30, TimeUnit.SECONDS);
 			}
 			catch (Exception ignored) {}
 		} else {
