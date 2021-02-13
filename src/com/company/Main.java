@@ -81,8 +81,8 @@ public class Main {
 //		new PuzzleGenerator(7, "https://www.puzzle-skyscrapers.com/?e=Nzo1LDM0MCw3MTY=");
 //		new PuzzleGenerator(7, "https://www.puzzle-skyscrapers.com/?e=Nzo5LDE5OCw2ODE=");
 //		new PuzzleGenerator(0,"https://www.puzzle-skyscrapers.com/?e=MDoxNjAsMDMx");
-//		new PuzzleGenerator(6);
-		new PuzzleGenerator(6, "https://www.puzzle-skyscrapers.com/?e=Njo4LDY5MiwyNTc=");
+		new PuzzleGenerator(6);
+//		new PuzzleGenerator(6, "https://www.puzzle-skyscrapers.com/?e=Njo4LDY5MiwyNTc=");
 
 //		ThreadMonitor monitor = new ThreadMonitor();
 
@@ -91,7 +91,7 @@ public class Main {
 		Board first;
 		if (PuzzleGenerator.hasField) {
 			first = new Board(PuzzleGenerator.tasks);
-			first.importBetter(PuzzleGenerator.field, true);
+			first.importBetter(PuzzleGenerator.field);
 		} else
 			first = new Board(PuzzleGenerator.tasks);
 		boards.add(first);

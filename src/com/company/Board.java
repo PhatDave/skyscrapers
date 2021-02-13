@@ -134,28 +134,10 @@ public class Board {
 	/**
 	 * Creates a deep copy of the given board by copying it's field
 	 */
-	public void importBetter(Map<String, ArrayList<Integer>> input, boolean initial) {
-
-
+	public void importBetter(Map<String, ArrayList<Integer>> input) {
 		for (Map.Entry<String, ArrayList<Integer>> entry : input.entrySet()) {
 			field.put(entry.getKey(), new ArrayList<>(entry.getValue()));
 		}
-
-
-//		for (String member : boardMembers) {
-//			try {
-//				var tempOne = input.get(member);
-//				ArrayList<Integer> currentMember = new ArrayList<>();
-//				for (Integer entry : tempOne) {
-//					int temp = entry;
-//					currentMember.add(temp);
-//					if (initial && input.get(member).size() == 1)
-//						assign(member, temp);
-//				}
-//				field.put(member, currentMember);
-//			}
-//			catch (Exception ignored) {}
-//		}
 	}
 
 	/**

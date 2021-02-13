@@ -32,7 +32,7 @@ public class PuzzleSolver implements Runnable {
 		this.board = board;
 		this.pos   = pos;
 		this.guess = guess;
-		this.board.importBetter(importBoard.exportBetter(), false);
+		this.board.importBetter(importBoard.exportBetter());
 	}
 
 	/**
