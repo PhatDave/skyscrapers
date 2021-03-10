@@ -5,6 +5,7 @@ import java.awt.*;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -16,19 +17,12 @@ import java.util.concurrent.TimeUnit;
 
 public class Main {
 	public static final String ANSI_RESET  = "\u001B[0m";
-	public static final String ANSI_BLACK  = "\u001B[30m";
-	public static final String ANSI_RED    = "\u001B[31m";
 	public static final String ANSI_GREEN  = "\u001B[32m";
-	public static final String ANSI_YELLOW = "\u001B[33m";
-	public static final String ANSI_BLUE   = "\u001B[34m";
-	public static final String ANSI_PURPLE = "\u001B[35m";
-	public static final String ANSI_CYAN   = "\u001B[36m";
-	public static final String ANSI_WHITE  = "\u001B[37m";
 
 	static int              threadsStarted = 0;
 	static Thread           mainThread     = Thread.currentThread();
 	static boolean          firstBoard     = true;
-	static ExecutorService  executor       = Executors.newFixedThreadPool(100);
+	static ExecutorService  executor       = Executors.newFixedThreadPool(1000);
 	static ArrayList<Board> boards         = new ArrayList<>();
 	static long             fullStart      = 0;
 	static long             solveStart     = 0;
@@ -40,7 +34,6 @@ public class Main {
 			solved        = true;
 			solutionBoard = currentSolver.board;
 			mainThread.interrupt();
-//			executor.shutdownNow();
 			try {
 				executor.awaitTermination(30, TimeUnit.SECONDS);
 			}
@@ -53,23 +46,15 @@ public class Main {
 					executor.execute(new Thread(
 							new PuzzleSolver(newBoard, guess, currentSolver.board.field.get(guess).get(i),
 							                 currentSolver.board)));
-					boards.add(newBoard);
+					System.out.println(newBoard.printBoard());
 					threadsStarted++;
 				}
+				currentSolver.board = null;
 			}
 		}
 	}
 
-	// TODO: introduce new variable to board named parent board to track the hierarchy to the winning one
-	// TODO: maybe make array list too to track every move per board on assign
-	// TODO: also make benchmark class to run same board x times, for this get a board for first time and reuse it
-	// TODO: output results of benchmark to txt or serialize and display with js
-	// TODO: also rework main algorithm to be more generic // using row column rowreversed and columnreversed
-	// TODO: try making constants final after assignment
-	// TODO: maybe rework propagation to add all to-eliminate entries to a queue and remove them from field all at onc
-	// TODO: export is actually a waste of time and returns a shallow copy where import makes a deep copy
-
-	public static void main(String[] args) throws InterruptedException, IOException {
+	public static void main(String[] args) {
 		fullStart = System.nanoTime();
 
 		JFrame    root  = new JFrame();
@@ -78,13 +63,7 @@ public class Main {
 		root.add(field);
 		root.pack();
 		root.setVisible(true);
-//		new PuzzleGenerator(7, "https://www.puzzle-skyscrapers.com/?e=Nzo1LDM0MCw3MTY=");
-//		new PuzzleGenerator(7, "https://www.puzzle-skyscrapers.com/?e=Nzo5LDE5OCw2ODE=");
-//		new PuzzleGenerator(0,"https://www.puzzle-skyscrapers.com/?e=MDoxNjAsMDMx");
-		new PuzzleGenerator(6);
-//		new PuzzleGenerator(6, "https://www.puzzle-skyscrapers.com/?e=Njo4LDY5MiwyNTc=");
-
-//		ThreadMonitor monitor = new ThreadMonitor();
+		new PuzzleGenerator(0);
 
 		System.out.println(PuzzleGenerator.link);
 
@@ -96,10 +75,6 @@ public class Main {
 			first = new Board(PuzzleGenerator.tasks);
 		boards.add(first);
 		System.out.println(first.printBoard());
-
-		// Starts thread for each incomplete - idle board in boards until a solution is found
-//		System.in.read();
-//		monitor.start();
 		solveStart = System.nanoTime();
 		try {
 			if (firstBoard) {
@@ -172,7 +147,8 @@ public class Main {
 			}
 			catch (IOException ignored) {}
 
-//			System.exit(0);
+			new Scanner(System.in).nextLine();
+			System.exit(0);
 		}
 	}
 }

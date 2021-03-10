@@ -28,5 +28,6 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="library" name="org.sikuli:sikuli-api:1.2.0" level="application" />
   </component>
 </module>

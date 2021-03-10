@@ -51,13 +51,6 @@ public class Board {
 	boolean                         checked       = false;
 	boolean                         solution      = false;
 	boolean                         error         = false;
-
-	// TODO: maybe optimize import/export a bit more, seems to be the weak link...
-	// TODO: maybe export and import only changes but that will still be lots
-	// TODO: maybe not export entire map but only elements that changed, that could be better
-	// TODO: maybe even assign all static members to the first board and make all subsequent boards as lightweight as
-	// TODO: possible
-	// TODO: situate every static variable into PuzzleGenerator and pass it by reference to each board
 	/**
 	 * Generates a board given by tasks, assigns all static values for use by other classes
 	 * @param tasks tasks for board to obey
@@ -117,21 +110,6 @@ public class Board {
 	}
 
 	/**
-	 * @deprecated use {@link #importBetter(Map, boolean)} instead
-	 */
-	public Map<String, ArrayList<Integer>> exportBetter() {
-		Map<String, ArrayList<Integer>> export = new HashMap<>();
-
-		for (String member : boardMembers) {
-			export.put(member, field.get(member));
-		}
-
-		return export;
-	}
-
-	// TODO: fix to documentation description and update doc
-	// wtf is initial?
-	/**
 	 * Creates a deep copy of the given board by copying it's field
 	 */
 	public void importBetter(Map<String, ArrayList<Integer>> input) {
@@ -144,7 +122,7 @@ public class Board {
 	 * Formats the board to a string
 	 * @return String
 	 */
-	protected String printBoard() {
+	protected synchronized String printBoard() {
 		System.out.println(tasks);
 		StringBuilder output      = new StringBuilder();
 		StringBuilder outputSmall = new StringBuilder();

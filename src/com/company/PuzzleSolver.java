@@ -32,7 +32,7 @@ public class PuzzleSolver implements Runnable {
 		this.board = board;
 		this.pos   = pos;
 		this.guess = guess;
-		this.board.importBetter(importBoard.exportBetter());
+		this.board.importBetter(importBoard.field);
 	}
 
 	/**
@@ -68,7 +68,6 @@ public class PuzzleSolver implements Runnable {
 	 */
 	public void run() {
 		board.inProgress = true;
-//		System.out.println(Thread.currentThread().getName());
 		// Check for guess
 		if (guess != 0) {
 			board.assign(pos, guess);
@@ -78,7 +77,8 @@ public class PuzzleSolver implements Runnable {
 			ArrayList<Integer> indexList = getAllIndices(tasks.get("Top"), 1);
 			// If our clue is 1 then from the next cell remove all choices but boardSize
 			for (Integer i : indexList) {
-				board.assign("A" + i, boardSize);
+				if (board.field.get("A" + i).size() > 1)
+					board.assign("A" + i, boardSize);
 			}
 		}
 		if (tasks.get("Top").contains(boardSize)) {
@@ -87,7 +87,8 @@ public class PuzzleSolver implements Runnable {
 			// And complete column
 			for (Integer i : indexList) {
 				for (int j = 1; j <= boardSize; j++) {
-					board.assign((char) (64 + j) + Integer.toString(i), j);
+					if (board.field.get((char) (64 + j) + Integer.toString(i)).size() > 1)
+						board.assign((char) (64 + j) + Integer.toString(i), j);
 				}
 			}
 		}
@@ -97,7 +98,8 @@ public class PuzzleSolver implements Runnable {
 			ArrayList<Integer> indexList = getAllIndices(tasks.get("Bottom"), 1);
 			// If our clue is 1 then from the next cell remove all choices but boardSize
 			for (Integer i : indexList) {
-				board.assign((char) (65 + boardSize - 1) + Integer.toString(i), boardSize);
+				if (board.field.get((char) (65 + boardSize - 1) + Integer.toString(i)).size() > 1)
+					board.assign((char) (65 + boardSize - 1) + Integer.toString(i), boardSize);
 			}
 		}
 		if (tasks.get("Bottom").contains(boardSize)) {
@@ -106,7 +108,8 @@ public class PuzzleSolver implements Runnable {
 			// And complete column
 			for (Integer i : indexList) {
 				for (int j = 1; j <= boardSize; j++) {
-					board.assign((char) (65 + boardSize - j) + Integer.toString(i), j);
+					if (board.field.get((char) (65 + boardSize - 1) + Integer.toString(i)).size() > 1)
+						board.assign((char) (65 + boardSize - j) + Integer.toString(i), j);
 				}
 			}
 		}
@@ -115,7 +118,8 @@ public class PuzzleSolver implements Runnable {
 			ArrayList<Integer> indexList = getAllIndices(tasks.get("Left"), 1);
 			// If our clue is 1 then from the next cell remove all choices but boardSize
 			for (Integer i : indexList) {
-				board.assign((char) (65 + i) + Integer.toString(0), boardSize);
+				if (board.field.get((char) (65 + i) + Integer.toString(0)).size() > 1)
+					board.assign((char) (65 + i) + Integer.toString(0), boardSize);
 			}
 		}
 		if (tasks.get("Left").contains(boardSize)) {
@@ -124,7 +128,8 @@ public class PuzzleSolver implements Runnable {
 			// And complete column
 			for (Integer i : indexList) {
 				for (int j = 1; j <= boardSize; j++) {
-					board.assign((char) (65 + i) + Integer.toString(j - 1), j);
+					if (board.field.get((char) (65 + i) + Integer.toString(0)).size() > 1)
+						board.assign((char) (65 + i) + Integer.toString(j - 1), j);
 				}
 			}
 		}
@@ -134,7 +139,8 @@ public class PuzzleSolver implements Runnable {
 			ArrayList<Integer> indexList = getAllIndices(tasks.get("Right"), 1);
 			// If our clue is 1 then from the next cell remove all choices but boardSize
 			for (Integer i : indexList) {
-				board.assign((char) (65 + i) + Integer.toString(boardSize - 1), boardSize);
+				if (board.field.get((char) (65 + i) + Integer.toString(boardSize - 1)).size() > 1)
+					board.assign((char) (65 + i) + Integer.toString(boardSize - 1), boardSize);
 			}
 		}
 		if (tasks.get("Right").contains(boardSize)) {
@@ -143,7 +149,8 @@ public class PuzzleSolver implements Runnable {
 			// And complete column
 			for (Integer i : indexList) {
 				for (int j = 1; j <= boardSize; j++) {
-					board.assign((char) (65 + i) + Integer.toString(boardSize - j), j);
+					if (board.field.get((char) (65 + i) + Integer.toString(boardSize - 1)).size() > 1)
+						board.assign((char) (65 + i) + Integer.toString(boardSize - j), j);
 				}
 			}
 		}

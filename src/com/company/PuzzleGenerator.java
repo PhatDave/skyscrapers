@@ -87,7 +87,6 @@ public class PuzzleGenerator {
 			BufferedReader reader = new BufferedReader(new InputStreamReader(con.getInputStream()));
 
 			Pattern taskRegex = Pattern.compile("var task = '((\\d?/?)+)(.+); \\$\\(document\\)");
-//			Pattern taskRegex     = Pattern.compile("var task = '(.+)';");
 			Pattern puzzleIDRegex = Pattern.compile("span id=\"puzzleID\">(.+)</span>");
 			String  temp;
 			System.out.println("Formatting html into board...");
@@ -110,41 +109,6 @@ public class PuzzleGenerator {
 						}
 						if (i == match.length() - 1 && match.charAt(i) == '/')
 							task.add(0);
-					}
-
-					match = m.group(3);
-					if (!match.equals("'")) {
-						hasField = true;
-						StringBuilder offset    = new StringBuilder();
-						int           offsetInt = 0;
-						try {
-							int i = 0;
-							while (true) {
-								i++;
-								offset.delete(0, offset.length());
-								while (match.charAt(i) >= 97 && match.charAt(i) <= 122) {
-									offset.append(match.charAt(i));
-									i++;
-
-									if (match.charAt(i) == '\'')
-										throw new StringIndexOutOfBoundsException();
-								}
-								if (offset.length() == 1) {
-									offsetInt += offset.charAt(0) - 96;
-								} else {
-									offsetInt += offset.charAt(0) - 96;
-									offsetInt += offset.charAt(1) - 96;
-								}
-
-								ArrayList<Integer> iveGotToDoThis = new ArrayList<>();
-								iveGotToDoThis.add((int) match.charAt(i) - 48);
-
-								field.put(offsetToPos(offsetInt), iveGotToDoThis);
-								offsetInt++;
-							}
-						}
-						catch (StringIndexOutOfBoundsException ignored) {}
-//						System.exit(0);
 					}
 				}
 			}
@@ -173,7 +137,6 @@ public class PuzzleGenerator {
 		tasks.put("Left", Left);
 		tasks.put("Right", Right);
 		System.out.println("Board done");
-		// System.out.println("Seed = " + this.puzzleID + "\nTask = " + this.task + "\nLink " + this.link);
 	}
 
 	/**
