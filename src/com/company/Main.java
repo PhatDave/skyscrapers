@@ -31,8 +31,8 @@ public class Main {
 
 	public static void main(String[] args) {
 		long execStart = System.nanoTime();
-		new PuzzleSolver(new Board(new PuzzleGenerator(true)));
-//		new PuzzleSolver(new Board(new PuzzleGenerator(6)));
+//		new PuzzleSolver(new Board(new PuzzleGenerator(true)));
+		new PuzzleSolver(new Board(new PuzzleGenerator(6)));
 		try {
 			Thread.sleep((long) (60 * 1e18));
 			System.exit(-1);
