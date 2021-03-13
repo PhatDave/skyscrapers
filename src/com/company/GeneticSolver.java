@@ -1,26 +1,100 @@
 package com.company;
 
+import javax.swing.*;
+import java.awt.*;
+import java.util.List;
 import java.util.*;
 
 public class GeneticSolver {
-	static final int    population = (int) Math.pow(2, 2);
-	static final int    numSplices = (int) Math.sqrt(population) - 1;
-	static final int    iterations = 2000;
-	static final double mutationChance = 0.1;
-	ArrayList<Integer> fitness = new ArrayList<>();
-	static       Board  bestBoard;
-	static       Board  startingBoard;
-	static       Random rand       = new Random();
+	//	static final int    population     = (int) Math.pow(20, 2);
+	//	static final int    numSplices     = (int) Math.sqrt(population) - 1;
+	static int    population     = 200;
+	static int    numSplices     = 3;
+	static int    iterations     = 1000;
+	static double mutationChance = 0.3;
+	static int    iteration      = 0;
+	static Board  bestBoard;
+	static Board  startingBoard;
+	static Random rand           = new Random();
+	ArrayList<Integer>  fitness           = new ArrayList<>();
 	Map<Board, Integer> currentPopulation = new HashMap<>();
+	JFrame              inputFrame        = new JFrame();
 
 	public GeneticSolver(Board input) {
-		startingBoard = input;
-		while (currentPopulation.size() < population) {
-			currentPopulation.put(generateRandomBoard(), 1);
-		}
-		startLoop();
-		System.out.println(bestBoard.printBoard());
-		DrawGraph.createAndShowGui(fitness);
+		GridBagConstraints gbc    = new GridBagConstraints();
+		GridBagLayout      layout = new GridBagLayout();
+		inputFrame.setResizable(false);
+		inputFrame.setLayout(layout);
+
+		gbc.gridx = 0;
+		gbc.gridy = 0;
+
+		inputFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+		JButton    confirm             = new JButton();
+		JLabel     popInputLabel       = new JLabel("Population");
+		JTextField popInput            = new JTextField("200");
+		JLabel     spliceInputLabel    = new JLabel("Splices");
+		JTextField spliceInput         = new JTextField("3");
+		JLabel     iterationInputLabel = new JLabel("Iterations");
+		JTextField iterationInput      = new JTextField("2000");
+		JSlider    mutationInput       = new JSlider(0, 100);
+		mutationInput.setValue(20);
+		JLabel     mutationInputLabel  = new JLabel("Mutation chance");
+
+		mutationInput.addChangeListener(e -> {
+			mutationInputLabel.setText(Double.toString((double) mutationInput.getValue() / 100));
+		});
+
+		popInput.setColumns(8);
+		spliceInput.setColumns(8);
+		iterationInput.setColumns(8);
+
+		inputFrame.add(popInputLabel, gbc);
+		gbc.gridy = 1;
+		inputFrame.add(spliceInputLabel, gbc);
+		gbc.gridy = 2;
+		inputFrame.add(iterationInputLabel, gbc);
+		gbc.gridy = 3;
+		inputFrame.add(mutationInputLabel, gbc);
+
+		gbc.gridx     = 1;
+		gbc.gridy     = 0;
+		gbc.gridwidth = 2;
+		inputFrame.add(popInput, gbc);
+		gbc.gridy = 1;
+		inputFrame.add(spliceInput, gbc);
+		gbc.gridy = 2;
+		inputFrame.add(iterationInput, gbc);
+		gbc.gridy = 3;
+		inputFrame.add(mutationInput, gbc);
+		gbc.gridy = 4;
+		inputFrame.add(confirm, gbc);
+
+		inputFrame.setSize(new Dimension(640, 480));
+
+		confirm.setText("Confirm");
+		confirm.addActionListener(e -> {
+			popInput.setEditable(false);
+			spliceInput.setEditable(false);
+			iterationInput.setEditable(false);
+			mutationInput.setEnabled(false);
+
+			population     = Integer.parseInt(popInput.getText());
+			numSplices     = Integer.parseInt(spliceInput.getText());
+			iterations     = Integer.parseInt(iterationInput.getText());
+			mutationChance = (double) mutationInput.getValue() / 100;
+
+			startingBoard = input;
+			while (currentPopulation.size() < population) {
+				currentPopulation.put(generateRandomBoard(), 1);
+			}
+			startLoop();
+			System.out.println(bestBoard.printBoard());
+			DrawGraph.createAndShowGui(fitness);
+		});
+		inputFrame.pack();
+		inputFrame.setVisible(true);
 	}
 
 	private String offsetToPos(int offset) {
@@ -66,7 +140,7 @@ public class GeneticSolver {
 
 	public void startLoop() {
 		System.out.println(population + " " + numSplices);
-		for (int iteration = 0; iteration < iterations; iteration++) {
+		for (iteration = 0; iteration < iterations; iteration++) {
 //			System.out.println("Iteration " + iteration);
 			for (Map.Entry<Board, Integer> iteratedBoard : currentPopulation.entrySet()) {
 				iteratedBoard.setValue(getFitness(iteratedBoard.getKey()));
@@ -76,7 +150,7 @@ public class GeneticSolver {
 			Map<Board, Integer> toRemove = new HashMap<>();
 			int                 i        = 0;
 			for (Map.Entry<Board, Integer> iteratedBoard : currentPopulation.entrySet()) {
-				if (i < (numSplices + 1)) {
+				if (i < (population / (numSplices + 1))) {
 					if (i == 0) {
 //						System.out.println("Best board " + iteratedBoard.getValue());
 						fitness.add(iteratedBoard.getValue());
@@ -102,6 +176,8 @@ public class GeneticSolver {
 					splicingPositions.add(tempRandInt);
 				}
 				Collections.sort(splicingPositions);
+//				System.out.println(currentPopulation);
+//				System.out.println(splicingPositions);
 
 				Map<Integer, ArrayList<String>> spliceArrays  = getSpliceArrays(splicingPositions);
 				Map<String, ArrayList<Integer>> newBoardField = new HashMap<>();
@@ -116,8 +192,8 @@ public class GeneticSolver {
 								continue;
 							}
 							int tempRandInt;
-							while (!startingBoard.field.get(pos).contains(tempRandInt =
-									                                            rand.nextInt(PuzzleGenerator.boardSize)))
+							while (!startingBoard.field.get(pos)
+									.contains(tempRandInt = rand.nextInt(PuzzleGenerator.boardSize)))
 								continue;
 							tempList.add(tempRandInt);
 							newBoardField.put(pos, tempList);
@@ -178,8 +254,9 @@ public class GeneticSolver {
 				int tempRandInt;
 				while (!tempBoard.field.get(mem).contains(tempRandInt = rand.nextInt(PuzzleGenerator.boardSize)))
 					continue;
-				tempBoard.field.get(mem).removeIf(e -> true);
-				tempBoard.field.get(mem).add(tempRandInt);
+//				tempBoard.field.get(mem).removeIf(e -> true);
+//				tempBoard.field.get(mem).add(tempRandInt);
+				tempBoard.assign(mem, tempRandInt);
 			}
 		}
 		return tempBoard;

@@ -25,11 +25,11 @@ public class Board {
 	public Board(Board input) {
 		importField(input.field);
 		assignedField.replaceAll((k,v) -> v = false);
-//		if (assignedField.size() < (PuzzleGenerator.boardSize * PuzzleGenerator.boardSize)) {
-//			for (String mem : PuzzleGenerator.boardMembers) {
-//				assignedField.putIfAbsent(mem, false);
-//			}
-//		}
+		if (assignedField.size() < (PuzzleGenerator.boardSize * PuzzleGenerator.boardSize)) {
+			for (String mem : PuzzleGenerator.boardMembers) {
+				assignedField.putIfAbsent(mem, false);
+			}
+		}
 	}
 
 	public void importField(Map<String, ArrayList<Integer>> input) {
@@ -67,6 +67,7 @@ public class Board {
 	}
 
 	protected void eliminate(String pos, int i) {
+		if (field.get(pos).size() == 1) return;
 		field.get(pos).removeIf(e -> e.equals(i));
 		if (field.get(pos).size() == 1 && !assignedField.get(pos))
 			assign(pos, field.get(pos).get(0));
