@@ -5,72 +5,159 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
-/**
- * Generates the puzzle by querying site and retrieving puzzle tasks and field, all
- * values are static
- * Creating multiple objects is strongly discouraged and may cause strange behavior
- * <p>
- * Static variables are
- *  <ul>
- *     <li>String puzzleID<pre>    ID of the puzzle generated</pre>
- *     <li>String link<pre>    link to the puzzle</pre>
- *     <li>int difficulty<pre>    puzzle difficulty (sizei in constructor)</pre>
- *     <li>Map field<pre>    board, see Board for more info</pre>
- *     <li>Map tasks<pre>    puzzle tasks, see Board for more info</pre>
- *  </ul>
- * @see com.company.Board
- */
 public class PuzzleGenerator {
-	static String                          puzzleID   = "";
-	static ArrayList<Integer>              task       = new ArrayList<>();
-	static Map<String, ArrayList<Integer>> tasks      = new HashMap<>();
-	static String                          link       = "";
-	static boolean                         hasField   = false;
-	static int                             difficulty = 0;
-	static Map<String, ArrayList<Integer>> field      = new HashMap<>();
+	static String                          puzzleID       = "";
+	static String                          link           = "";
+	static ArrayList<Integer>              task           = new ArrayList<>();
+	static Map<String, ArrayList<Integer>> tasks          = new HashMap<>();
+	static ArrayList<String>               boardMembers   = new ArrayList<>();
+	static Map<String, ArrayList<String>>  peers          = new HashMap<>();
+	static Map<Integer, ArrayList<String>> rows           = new HashMap<>();
+	static Map<Integer, ArrayList<String>> columns        = new HashMap<>();
+	static Map<Integer, ArrayList<String>> reverseRows    = new HashMap<>();
+	static Map<Integer, ArrayList<String>> reverseColumns = new HashMap<>();
+	static Map<Integer, ArrayList<String>> taskRows       = new HashMap<>();
+	static ArrayList<Integer>              combinations   = new ArrayList<>();
+	static int                             difficulty     = 0;
+	static int                             boardSize;
+	boolean                         hasField = false;
+	Map<String, ArrayList<Integer>> field    = new HashMap<>();
 
-	/**
-	 * Assigns difficulty to 0 by default
-	 * @deprecated use {@link #PuzzleGenerator(int)} method instead
-	 * @see PuzzleGenerator Static variables available
-	 */
 	public PuzzleGenerator() {
-		this.generate(0, "https://www.puzzle-skyscrapers.com/", false);
+		this.getBoard(0, "https://www.puzzle-skyscrapers.com/", false);
 	}
 
-	/**
-	 * Generate a puzzle seeded by link
-	 * @param sizei difficulty of puzzle generated, 0 - 2 for 4x4, 3 - 5 for 5x5, 6 - 8 for 6x6, >8 is not supported
-	 * @param link link to seed puzzle by
-	 * @see PuzzleGenerator Static variables available
-	 */
 	public PuzzleGenerator(int sizei, String link) {
-		this.generate(sizei, link, true);
+		this.getBoard(sizei, link, true);
 	}
 
-	/**
-	 * Generate a random puzzle
-	 * @param sizei difficulty of puzzle generated, 0 - 2 for 4x4, 3 - 5 for 5x5, 6 - 8 for 6x6, >8 is not supported
-	 * @see PuzzleGenerator Static variables available
-	 */
 	public PuzzleGenerator(int sizei) {
-		this.generate(sizei, "https://www.puzzle-skyscrapers.com/", false);
+		this.getBoard(sizei, "https://www.puzzle-skyscrapers.com/", false);
 	}
 
-	/**
-	 * Used by class' constructor
-	 * @param sizei difficulty of puzzle generated, 0 - 2 for 4x4, 3 - 5 for 5x5, 6 - 8 for 6x6, >8 is not supported
-	 * @param link link to seed puzzle by
-	 */
-	private void generate(int sizei, String link, boolean linkSet) {
+	public PuzzleGenerator(boolean ok) {
+		if (ok) {
+			Integer[] temp = {
+					2, 3, 3, 1, 4, 2,
+					2, 1, 3, 3, 2, 2,
+					2, 4, 1, 2, 5, 2,
+					3, 1, 4, 3, 2, 2,
+			};
+			Map<String, Integer> entryField = new HashMap<>();
+			task.addAll(Arrays.asList(temp));
+
+			entryField.put("C2", 2);
+			entryField.put("C3", 4);
+			entryField.put("D5", 4);
+			entryField.put("F3", 1);
+
+			for (Map.Entry<String, Integer> entry : entryField.entrySet()) {
+				ArrayList<Integer> tempList = new ArrayList<>();
+				tempList.add(entry.getValue());
+				field.put(entry.getKey(), tempList);
+			}
+
+			generateBoard();
+		}
+	}
+
+	private void generateBoard() {
+		boardSize = task.size() / 4;
+		ArrayList<Integer> Top    = new ArrayList<>();
+		ArrayList<Integer> Bottom = new ArrayList<>();
+		ArrayList<Integer> Left   = new ArrayList<>();
+		ArrayList<Integer> Right  = new ArrayList<>();
+		for (int i = 0; i < boardSize; i++) {
+			Top.add(task.get(i));
+			Bottom.add(task.get(i + boardSize));
+			Left.add(task.get(i + (2 * boardSize)));
+			Right.add(task.get(i + (3 * boardSize)));
+
+			combinations.add(i + 1);
+		}
+		tasks.put("Top", Top);
+		tasks.put("Bottom", Bottom);
+		tasks.put("Left", Left);
+		tasks.put("Right", Right);
+
+		// Generate board
+		for (int i = 0; i < boardSize; i++) {
+			for (int j = 0; j < boardSize; j++) {
+				String pos = ((char) (65 + i)) + Integer.toString(j);
+				field.computeIfAbsent(pos, k -> new ArrayList<>(combinations));
+				if (boardMembers.size() < boardSize * boardSize)
+					boardMembers.add(((char) (65 + i)) + Integer.toString(j));
+			}
+		}
+		// Generate rows and columns
+		for (int i = 0; i < boardSize; i++) {
+			ArrayList<String> row    = new ArrayList<>();
+			ArrayList<String> column = new ArrayList<>();
+			for (int j = 0; j < boardSize; j++) {
+				row.add((char) (65 + i) + Integer.toString(j));
+				column.add((char) (65 + j) + Integer.toString(i));
+			}
+			rows.put(i, row);
+			columns.put(i, column);
+
+			ArrayList<String> reversedRow    = new ArrayList<>();
+			ArrayList<String> reversedColumn = new ArrayList<>();
+			for (int j = row.size() - 1; j >= 0; j--) {
+				reversedRow.add(row.get(j));
+				reversedColumn.add(column.get(j));
+			}
+			reverseRows.put(i, reversedRow);
+			reverseColumns.put(i, reversedColumn);
+		}
+		// Generate peers
+		for (String member : boardMembers) {
+			ArrayList<String> memberPeers = new ArrayList<>();
+			char              letter      = member.charAt(0);
+			char              digit       = member.charAt(1);
+
+			for (int i = 0; i < boardSize; i++) {
+				String currentMember = letter + Integer.toString(i);
+				if (!currentMember.equals(member))
+					memberPeers.add(currentMember);
+
+				currentMember = Character.toString((char) (65 + i)) + digit;
+				if (!currentMember.equals(member))
+					memberPeers.add(currentMember);
+			}
+			peers.put(member, memberPeers);
+		}
+
+		for (int i = 0; i < boardSize; i++) {
+			ArrayList<String> temp = new ArrayList<>();
+			for (int j = 0; j < boardSize; j++)
+			     temp.add((char) (65 + j) + Integer.toString(i));
+			taskRows.put(i, temp);
+		}
+		for (int i = 0; i < boardSize; i++) {
+			ArrayList<String> temp = new ArrayList<>();
+			for (int j = 0; j < boardSize; j++)
+			     temp.add((char) ((65 + boardSize) - 1 - j) + Integer.toString(i));
+			taskRows.put(boardSize + i, temp);
+		}
+		for (int i = 0; i < boardSize; i++) {
+			ArrayList<String> temp = new ArrayList<>();
+			for (int j = 0; j < boardSize; j++)
+			     temp.add((char) (65 + i) + Integer.toString(j));
+			taskRows.put(boardSize * 2 + i, temp);
+		}
+		for (int i = 0; i < boardSize; i++) {
+			ArrayList<String> temp = new ArrayList<>();
+			for (int j = 0; j < boardSize; j++)
+			     temp.add((char) (65 + i) + Integer.toString(boardSize - 1 - j));
+			taskRows.put(boardSize * 3 + i, temp);
+		}
+	}
+
+	private void getBoard(int sizei, String link, boolean linkSet) {
 		String rootLink = "https://www.puzzle-skyscrapers.com/";
 		difficulty = sizei;
 		if (!linkSet) {
@@ -89,17 +176,17 @@ public class PuzzleGenerator {
 			Pattern taskRegex = Pattern.compile("var task = '((\\d?/?)+)(.+); \\$\\(document\\)");
 //			Pattern taskRegex     = Pattern.compile("var task = '(.+)';");
 			Pattern puzzleIDRegex = Pattern.compile("span id=\"puzzleID\">(.+)</span>");
-			String  temp;
+			String  currentLine;
 			System.out.println("Formatting html into board...");
-			while ((temp = reader.readLine()) != null) {
-				Matcher m = puzzleIDRegex.matcher(temp);
-				if (m.find()) {
-					puzzleID = m.group(1);
+			while ((currentLine = reader.readLine()) != null) {
+				Matcher matcher = puzzleIDRegex.matcher(currentLine);
+				if (matcher.find()) {
+					puzzleID = matcher.group(1);
 				}
 
-				m = taskRegex.matcher(temp);
-				if (m.find()) {
-					String match = m.group(1);
+				matcher = taskRegex.matcher(currentLine);
+				if (matcher.find()) {
+					String match = matcher.group(1);
 
 					for (int i = 0; i < match.length(); i++) {
 						if (match.charAt(i) == '/') {
@@ -112,7 +199,7 @@ public class PuzzleGenerator {
 							task.add(0);
 					}
 
-					match = m.group(3);
+					match = matcher.group(3);
 					if (!match.equals("'")) {
 						hasField = true;
 						StringBuilder offset    = new StringBuilder();
@@ -157,28 +244,12 @@ public class PuzzleGenerator {
 			e.printStackTrace();
 		}
 
-		int                boardSize = task.size() / 4;
-		ArrayList<Integer> Top       = new ArrayList<>();
-		ArrayList<Integer> Bottom    = new ArrayList<>();
-		ArrayList<Integer> Left      = new ArrayList<>();
-		ArrayList<Integer> Right     = new ArrayList<>();
-		for (int i = 0; i < boardSize; i++) {
-			Top.add(task.get(i));
-			Bottom.add(task.get(i + boardSize));
-			Left.add(task.get(i + (2 * boardSize)));
-			Right.add(task.get(i + (3 * boardSize)));
-		}
-		tasks.put("Top", Top);
-		tasks.put("Bottom", Bottom);
-		tasks.put("Left", Left);
-		tasks.put("Right", Right);
+		generateBoard();
 		System.out.println("Board done");
+		System.out.println(PuzzleGenerator.link);
 		// System.out.println("Seed = " + this.puzzleID + "\nTask = " + this.task + "\nLink " + this.link);
 	}
 
-	/**
-	 * Used internally by {@link #generate}
-	 */
 	private String offsetToPos(int offset) {
 		int           n      = 0;
 		StringBuilder output = new StringBuilder();
