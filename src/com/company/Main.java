@@ -1,5 +1,6 @@
 package com.company;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 // TODO: Enable looking through set fields for complex puzzles and maybe add option for directly importing puzzle
@@ -38,7 +39,9 @@ public class Main {
 		}
 		catch (InterruptedException e) {
 			System.out.println(solutionBoard.printBoard());
-			GeneticSolver newGen = new GeneticSolver(solutionBoard);
+			try {
+				new GeneticSolver(solutionBoard);
+			} catch (IOException ignored) {}
 		}
 	}
 }

@@ -2,6 +2,9 @@ package com.company;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.List;
 import java.util.*;
 
@@ -19,8 +22,9 @@ public class GeneticSolver {
 	ArrayList<Integer>  fitness           = new ArrayList<>();
 	Map<Board, Integer> currentPopulation = new HashMap<>();
 	JFrame              inputFrame        = new JFrame();
+	BufferedWriter      fileWriter        = new BufferedWriter(new FileWriter("output.txt"));
 
-	public GeneticSolver(Board input) {
+	public GeneticSolver(Board input) throws IOException {
 		GridBagConstraints gbc    = new GridBagConstraints();
 		GridBagLayout      layout = new GridBagLayout();
 		inputFrame.setResizable(false);
@@ -40,7 +44,7 @@ public class GeneticSolver {
 		JTextField iterationInput      = new JTextField("2000");
 		JSlider    mutationInput       = new JSlider(0, 100);
 		mutationInput.setValue(20);
-		JLabel     mutationInputLabel  = new JLabel("Mutation chance");
+		JLabel mutationInputLabel = new JLabel("Mutation chance");
 
 		mutationInput.addChangeListener(e -> {
 			mutationInputLabel.setText(Double.toString((double) mutationInput.getValue() / 100));
@@ -89,7 +93,7 @@ public class GeneticSolver {
 			while (currentPopulation.size() < population) {
 				currentPopulation.put(generateRandomBoard(), 1);
 			}
-			startLoop();
+			try { startLoop(); } catch (IOException ignored) {}
 			System.out.println(bestBoard.printBoard());
 			DrawGraph.createAndShowGui(fitness);
 		});
@@ -138,10 +142,12 @@ public class GeneticSolver {
 		return spliceArrays;
 	}
 
-	public void startLoop() {
+	public void startLoop() throws IOException {
 		System.out.println(population + " " + numSplices);
+		fileWriter.write("Population: " + population + "; numSplices: " + numSplices + "; mutationChance: " + mutationChance + "\n");
 		for (iteration = 0; iteration < iterations; iteration++) {
 //			System.out.println("Iteration " + iteration);
+			fileWriter.write("Iteration " + iteration + "\n");
 			for (Map.Entry<Board, Integer> iteratedBoard : currentPopulation.entrySet()) {
 				iteratedBoard.setValue(getFitness(iteratedBoard.getKey()));
 			}
@@ -152,10 +158,13 @@ public class GeneticSolver {
 			for (Map.Entry<Board, Integer> iteratedBoard : currentPopulation.entrySet()) {
 				if (i < (population / (numSplices + 1))) {
 					if (i == 0) {
+						fileWriter.write("Best board " + iteratedBoard.getValue() + "\n");
 //						System.out.println("Best board " + iteratedBoard.getValue());
 						fitness.add(iteratedBoard.getValue());
 						bestBoard = iteratedBoard.getKey();
 					}
+					fileWriter.write("Best boards (" + (i + 1) + ") " + iteratedBoard.getValue() + "\n" +
+					                 iteratedBoard.getKey().printBoard() + "\n");
 //					System.out.println("Board " + (i + 1) + "  " + iteratedBoard.getValue());
 //					System.out.println(iteratedBoard.getKey().printBoard());
 					i += 1;
