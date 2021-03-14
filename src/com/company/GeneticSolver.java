@@ -19,6 +19,7 @@ public class GeneticSolver {
 	static Board  bestBoard;
 	static Board  startingBoard;
 	static Random rand           = new Random();
+	Board               solvedBoard;
 	ArrayList<Integer>  fitness           = new ArrayList<>();
 	Map<Board, Integer> currentPopulation = new HashMap<>();
 	JFrame              inputFrame        = new JFrame();
@@ -93,7 +94,7 @@ public class GeneticSolver {
 			while (currentPopulation.size() < population) {
 				currentPopulation.put(generateRandomBoard(), 1);
 			}
-			try { startLoop(); } catch (IOException ignored) {}
+			try { solvedBoard = startLoop(); } catch (IOException ignored) {}
 			System.out.println(bestBoard.printBoard());
 			DrawGraph.createAndShowGui(fitness);
 		});
@@ -142,9 +143,10 @@ public class GeneticSolver {
 		return spliceArrays;
 	}
 
-	public void startLoop() throws IOException {
+	public Board startLoop() throws IOException {
 		System.out.println(population + " " + numSplices);
-		fileWriter.write("Population: " + population + "; numSplices: " + numSplices + "; mutationChance: " + mutationChance + "\n");
+		fileWriter.write("Population: " + population + "; numSplices: " + numSplices + "; mutationChance: " +
+		                 mutationChance + "\n");
 		for (iteration = 0; iteration < iterations; iteration++) {
 //			System.out.println("Iteration " + iteration);
 			fileWriter.write("Iteration " + iteration + "\n");
@@ -162,6 +164,7 @@ public class GeneticSolver {
 //						System.out.println("Best board " + iteratedBoard.getValue());
 						fitness.add(iteratedBoard.getValue());
 						bestBoard = iteratedBoard.getKey();
+						if (iteratedBoard.getValue() == 0) return iteratedBoard.getKey();
 					}
 					fileWriter.write("Best boards (" + (i + 1) + ") " + iteratedBoard.getValue() + "\n" +
 					                 iteratedBoard.getKey().printBoard() + "\n");
@@ -215,6 +218,7 @@ public class GeneticSolver {
 			}
 			currentPopulation = newPopulation;
 		}
+		return null;
 	}
 
 	// Ty stackoverflow
@@ -235,7 +239,7 @@ public class GeneticSolver {
 		for (Map.Entry<Integer, ArrayList<String>> temp : PuzzleGenerator.taskRows.entrySet()) {
 			ArrayList<Integer> allAssignedValues = new ArrayList<>();
 			for (String pos : temp.getValue()) {
-				if (allAssignedValues.contains(input.field.get(pos).get(0))) fitness += 2;
+				if (allAssignedValues.contains(input.field.get(pos).get(0))) fitness += 200;
 				allAssignedValues.add(input.field.get(pos).get(0));
 			}
 
@@ -251,7 +255,8 @@ public class GeneticSolver {
 					}
 				}
 			}
-			if (visible != temp.getKey()) fitness += 1;
+			if (PuzzleGenerator.task.get(temp.getKey()) > 0 && visible != PuzzleGenerator.task.get(temp.getKey()))
+				fitness += 50;
 		}
 		return fitness;
 	}

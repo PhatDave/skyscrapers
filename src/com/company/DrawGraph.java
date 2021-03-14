@@ -7,7 +7,7 @@ import java.util.List;
 
 @SuppressWarnings("serial")
 public class DrawGraph extends JPanel {
-	private static final int MAX_SCORE = 120;
+	private static final int MAX_SCORE = 8000;
 	private static final int PREF_W = 1200;
 	private static final int PREF_H = 650;
 	private static final int BORDER_GAP = 30;

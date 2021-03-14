@@ -253,7 +253,7 @@ public class PuzzleGenerator {
 	private String offsetToPos(int offset) {
 		int           n      = 0;
 		StringBuilder output = new StringBuilder();
-		while (offset > task.size() / 4) {
+		while (offset >= task.size() / 4) {
 			offset -= task.size() / 4;
 			n++;
 		}
